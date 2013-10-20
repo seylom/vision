@@ -1,0 +1,56 @@
+im1 = imread('chapel00.png');
+im2 = imread('chapel01.png');
+sz = size(im1);
+
+%compute fundamental matrix using the 8-point algorithm 
+d = load('prob3.mat');
+size(d.matches);
+
+%select the first 8 matches.
+pts = d.matches(:,:);
+%A = zeros(8,9);
+
+A1 = zeros(8,2);
+A2 = zeros(8,2);
+
+%plotmatches(im1,im2,[d.c1 d.r1]',[d.c2 d.r2]',d.matches');
+% 
+% a1 = [d.c1(d.matches(:,1)) d.r1(d.matches(:,1))];
+% b1 = [d.c2(d.matches(:,2)) d.r2(d.matches(:,2))];
+% 
+% g = [a1 b1];
+
+%a3 = zeros(size(a1,1),4);
+a3 = zeros(8,4);
+
+%good matches selected : [x1 y1 x2 y2]
+a3(1,:) = [145 48 174 56];
+a3(2,:) = [144 13 172 20];
+a3(3,:) = [146 65 174 73];
+a3(4,:) = [174 181 209 192];
+a3(5,:) = [179 131 215 140];
+a3(6,:) = [331 145 362 155];
+a3(7,:) = [271 166 309 175];
+a3(8,:) = [265 203 303 213];
+
+x1 = a3(:,1:2);
+x2 = a3(:,3:4);
+
+x1 = [d.c1(pts(:,1)) d.r1(pts(:,1))] ;
+x2 = [d.c2(pts(:,2)) d.r2(pts(:,2))] ;
+
+h1 = 1:size(x1,1);
+
+plotmatches(im1,im2,x1',x2',[h1' h1']');
+
+
+
+%compute epipolar lines for first point:
+%l1 = F*x1(:,1);
+
+%e1 = [a2(1,:) 1]*F*[a1(1,:) 1]';
+%e2 = [a2(2,:) 1]*F*[a1(2,:) 1]';
+%e3 = [a2(3,:) 1]*F*[a1(3,:) 1]';
+
+
+

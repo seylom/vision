@@ -1,0 +1,82 @@
+function coarse_to_fine()
+
+imgs = cell(51,1);
+for i=1:51
+    imgs{i} = imread(strcat(strcat('Images/hotel.seq',int2str(i-1)),'.png'));
+end
+
+[h w] = size(imgs{1});
+%extract the feature keypoints to be tracked using the 
+%Harris criteria
+[startXs startYs] = getKeypoints(imgs{1},0.0000003);
+
+wid = 7;
+activeFlag = (startXs > wid) & (startYs > wid) & (startXs < imgWidth -wid) & (startYs < imgHeight -wid);
+
+track = {};
+track{1}.startXs = startXs;
+track{1}.startYs = startYs;
+track{1}.activeFlag = activeFlag;
+
+id = 0:10:50;
+
+for j = 1:5
+    idx1 = id(j); 
+    im0 = imgs{idx1};
+    im1 = imgs{idx1 + 10};
+
+    % Build gaussian pyramid
+    scale = 2;
+    numL = 5;
+    img0GP = pyramid(im0, numL);
+    img1GP = pyramid(im1, numL);
+    
+    startXs = startXs/(scale.^(numL-1));
+    startYs = startYs/(scale.^(numL-1));
+    newXs = startXs;
+    newYs = startYs;
+    
+    for indL = 1: numL
+       display(['Level = ', num2str(indL)]);
+       im0 =  img0GP{indL}.img;
+       im1 =  img1GP{indL}.img;
+       [newXs newYs activeFlag] = predictTranslationAllMultiRes(startXs, startYs, im0, im1, activeFlag, newXs, newYs);
+       % Check correctness
+%        figure(1), imshow(im0/255); hold on;
+%        plot(startXs, startYs, 'g.', 'linewidth',3); hold off; 
+%        figure(2), imshow(im1/255); hold on;
+%        plot(newXs, newYs, 'g.', 'linewidth',3); hold off;
+       
+       if(indL~=numL)
+        newXs = newXs*scale;
+        newYs = newYs*scale;
+        startXs = startXs*scale;
+        startYs = startYs*scale;
+       end
+    end
+    startXs = newXs;
+    startYs = newYs;
+
+    track{j+1}.startXs = startXs;
+    track{j+1}.startYs = startYs;
+    track{j+1}.activeFlag = activeFlag;
+
+%     figure,
+%     imshow(im1/255); hold on;
+%     plot(newXs, newYs, 'g.', 'linewidth',3); 
+%     title(['Frame ', num2str(indImg1),'/50']);
+end
+
+end
+
+function  imgGP = pyramid(img, levelCount)
+    h = fspecial('gaussian');
+    imgGP = {};
+    imgGP{levelCount}.img = img;
+    cimg = img;
+    for i = 2:levelCount
+        imfil = imfilter(cimg, h, 'replicate');
+        res = imresize(imfil, 1/2);
+        imgGP{levelCount-i+1}.img = res;
+    end
+end

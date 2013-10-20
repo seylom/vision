@@ -1,0 +1,38 @@
+function [T x] = normalizepoints(x)
+
+b = x;
+%compute image centroids
+c = mean(x(:,1:2));
+
+%shift all points
+
+x(:,1) = x(:,1) -c1(1);
+x(:,2) = x(:,2) -c1(2);
+
+m = mean(sqrt(x(:,1).^2 + x(:,2).^2));
+v = sqrt(2)/m;
+
+T = [v 0 -v*c(1);0 v -v*c(2);0 0 1];
+
+x = T*[b ones(size(b,1),1)]';
+
+function [F1 T1 T2] = computefundNorm(b1,b2)
+
+[T1 b1]= normalizepoints(b1);
+[T2 b2]= normalizepoints(b2);
+
+b1 =  b1';
+b2 =  b2';
+
+A = [b2(:,1).*b1(:,1) b2(:,1).*b1(:,2) b2(:,1) b2(:,2).*b1(:,1) b2(:,2).*b1(:,2) b2(:,2) b1(:,1) b1(:,2) ones(size(b1,1),1) ];
+
+%using singular value decomposition to solve A
+[U, S, V] = svd(A);
+f = V(:, end); 
+F1 = reshape(f, [3 3])';
+
+%enforcing the det(F) = 0 constraint.
+[U, S, V] = svd(F1); 
+S(3,3) = 0; 
+F1 = U*S*V';
+
